@@ -1,0 +1,99 @@
+version: "3.8" #Check docker engine version and match to docker compose version
+
+services: 
+
+#create container for application:Project 1
+  project01: #name of job
+    #image:  pull image on docker hub 
+    build: . #looking for dockerfile in local folder to build image
+    ports:
+      - 8081:8080  #Specify ports Host:container
+    environment:  # specify environmental variables in container to be used
+      - DB_URL
+      - DB_USER
+      - DB_PASS
+    container_name: project01-container # name of container to be created
+    depends_on: 
+      - postgres
+    volumes:
+      - ../logs/app.log:/logs/application.log  #you mush create folder and file path or it will create the file as a folder (create file path in specified directory)
+
+
+#create container for postgres
+  postgres: #name of job
+    image: postgres #created image to be pulled from dockerhub
+    ports: 
+      - 5432:5432 #Specify ports Host:container
+    environment: 
+      - POSTGRES_PASSWORD=pass #password on host postgress
+    container_name: postgres-container # name of container to be created
+    volumes:
+      - db-data:/var/lib/postgresql/data  #create local file to store data?
+    
+
+#create container for loki
+  loki:
+    image: grafana/loki #created image to be pulled from dockerhub
+    ports: 
+      - 3100:3100
+    container_name: loki-container # name of container to be created
+    # frontend: 
+    #   instance_addr: 127.0.0.1
+    # logging:
+    #   driver: loki
+    #   options:
+    #     loki-url: "https://<user_id>:<password>@logs-prod-us-central1.grafana.net/loki/api/v1/push"
+
+#create continaer for grafana
+  grafana:
+    image: grafana/grafana #created image to be pulled from dockerhub
+    ports: 
+      - 3000:3000
+    container_name: grafana-container
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    depends_on:
+      - loki
+
+#create container for promtail
+  promtail: #collects logs to send to Loki
+    image: grafana/promtail #created image to be pulled from dockerhub
+    container_name: promtail-container
+    volumes:
+      - ./promtail/promtail-docker-config.yml:/etc/promtail/docker-config.yaml #passing in promtail file and putting it into container, so when instance gets started in can find its config
+      - ../logs/app.log:/var/log/application.log  #pass in logs from host device to into promtail container
+    command: "--config.file=/etc/promtail/docker-config.yaml"
+
+#create container for prometheus    
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus-container
+    ports:
+      - 9090:9090
+    volumes:
+      # - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus:/etc/prometheus   #passing the directory instead of just the onfig file for prometheus
+      - prometheus-data:/prometheus
+
+#create container for alertmanager     
+  alertmanager:
+    image: prom/alertmanager:latest
+    volumes:
+      - ./alertmanager:/etc/alertmanager
+    command: 
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    ports:
+      - 9093:9093
+    container_name: alertmanager-container
+
+
+
+
+volumes:
+  db-data:
+    driver: local
+  grafana-storage:
+    driver: local
+  prometheus-data:
+    driver: local

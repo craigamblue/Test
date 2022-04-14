@@ -1,0 +1,23 @@
+global:
+  scrape_interval:     15s
+
+alerting:    #add alerting
+  alertmanagers: 
+    - static_configs:
+      - targets: 
+        - alertmanager:9093
+        #alert manager target
+
+rule_files:     #add rules.yml file that I created
+  - rules.yml
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: 
+        - prometheus:9090
+  - job_name: project01
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets:
+        - project01:8080

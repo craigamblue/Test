@@ -1,0 +1,14 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\.mvn",
+    "\\bin",
+    "\\bin\\.mvn",
+    "\\bin\\src",
+    "\\bin\\src\\main",
+    "\\bin\\src\\main\\resources",
+    "\\src"
+  ],
+  "SelectedNode": "\\bin\\src\\main\\resources\\application.yml",
+  "PreviewInSolutionExplorer": false
+}
