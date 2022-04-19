@@ -5,7 +5,7 @@ pipeline {
         stage("Maven clean package") {
             steps {
                 sh 'mvn clean package'
-                echo 'Building ...'
+                echo 'Building now...'
             }
         }
     }
